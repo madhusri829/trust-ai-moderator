@@ -394,28 +394,26 @@ export default function App() {
       )}
 
       {activePage === "implementation" && (
-        <section className="section">
-          <h2 className="section-title">Implementation</h2>
+  <section className="section">
+    <h2 className="section-title">Implementation</h2>
 
-          <div className="image-grid">
-            <div className="image-card">
-              <img src="/future.webp" alt="Future of moderation" />
-              <h3>Future of Moderation</h3>
-              <p>
-                AI helps improve safety, relevance, and content quality in modern digital platforms.
-              </p>
-            </div>
+    <div className="image-grid">
+      <div className="image-card">
+        <h3>Future of Moderation</h3>
+        <p>
+          AI helps improve safety, relevance, and content quality in modern digital platforms.
+        </p>
+      </div>
 
-            <div className="image-card">
-              <img src="/tools.webp" alt="Tools and methods" />
-              <h3>Tools & Methods</h3>
-              <p>
-                Uses privacy locks, content warnings, cookie detection, and controlled navigation.
-              </p>
-            </div>
-          </div>
-        </section>
-      )}
+      <div className="image-card">
+        <h3>Tools & Methods</h3>
+        <p>
+          Uses privacy locks, content warnings, cookie detection, and controlled navigation.
+        </p>
+      </div>
+    </div>
+  </section>
+)}
 
       {activePage === "signup" && (
         <section className="form-section">

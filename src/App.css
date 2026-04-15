@@ -176,11 +176,7 @@ input {
   line-height: 1.7;
 }
 
-.image-card img {
-  width: 100%;
-  border-radius: 16px;
-  margin-bottom: 14px;
-}
+
 
 .form-section {
   display: flex;
