@@ -216,7 +216,11 @@ export default function App() {
 
   const unlockSite = () => {
     if (!loggedInUser) {
-      alert("Please login first.");
+      localStorage.removeItem("site_locked");
+      setSiteLocked(false);
+      setUnlockPassword("");
+      setActivePage("login");
+      alert("Session expired. Please login again.");
       return;
     }
 
@@ -232,6 +236,7 @@ export default function App() {
   const unlockPrivateContent = () => {
     if (!loggedInUser) {
       alert("Please login first.");
+      setActivePage("login");
       return;
     }
 
@@ -616,18 +621,37 @@ export default function App() {
         <div className="site-lock-overlay">
           <div className="site-lock-box">
             <h2>Site Locked</h2>
-            <p>This website was locked because you switched tab, window, or app.</p>
 
-            <input
-              type="password"
-              placeholder="Enter your password"
-              value={unlockPassword}
-              onChange={(e) => setUnlockPassword(e.target.value)}
-            />
+            {!loggedInUser ? (
+              <>
+                <p>Your session is not active. Please login again.</p>
+                <button
+                  className="btn primary-btn full-btn"
+                  onClick={() => {
+                    localStorage.removeItem("site_locked");
+                    setSiteLocked(false);
+                    setActivePage("login");
+                  }}
+                >
+                  Go to Login
+                </button>
+              </>
+            ) : (
+              <>
+                <p>This website was locked because you switched tab, window, or app.</p>
 
-            <button className="btn primary-btn full-btn" onClick={unlockSite}>
-              Unlock Site
-            </button>
+                <input
+                  type="password"
+                  placeholder="Enter your password"
+                  value={unlockPassword}
+                  onChange={(e) => setUnlockPassword(e.target.value)}
+                />
+
+                <button className="btn primary-btn full-btn" onClick={unlockSite}>
+                  Unlock Site
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
