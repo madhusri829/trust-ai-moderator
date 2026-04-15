@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trust AI Moderator</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup">
+    <h1>Trust AI Moderator</h1>
+    <p class="sub">Chrome Operator</p>
+
+    <div class="tabs">
+      <button id="showLogin" class="tab-btn active">Login</button>
+      <button id="showSignup" class="tab-btn">Sign Up</button>
+    </div>
+
+    <div id="loginView" class="view active">
+      <input id="loginUsername" type="text" placeholder="Username" />
+      <input id="loginPassword" type="password" placeholder="Password" />
+      <button id="loginBtn">Login</button>
+    </div>
+
+    <div id="signupView" class="view">
+      <input id="signupUsername" type="text" placeholder="Create username" />
+      <input id="signupEmail" type="email" placeholder="Create email" />
+      <input id="signupPassword" type="password" placeholder="Create password" />
+      <button id="signupBtn">Create Account</button>
+    </div>
+
+    <hr />
+
+    <label class="row">
+      <span>Protection</span>
+      <input type="checkbox" id="enabledToggle" />
+    </label>
+
+    <label class="row">
+      <span>Moderation</span>
+      <input type="checkbox" id="moderationToggle" />
+    </label>
+
+    <label class="row">
+      <span>Safe Links Only</span>
+      <input type="checkbox" id="safeLinksToggle" />
+    </label>
+
+    <input id="setPasswordInput" type="password" placeholder="Set new password" />
+
+    <div class="buttons">
+      <button id="savePasswordBtn">Save Password</button>
+      <button id="lockNowBtn">Lock Now</button>
+    </div>
+
+    <button id="logoutBtn" class="secondary">Logout</button>
+
+    <p id="status"></p>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

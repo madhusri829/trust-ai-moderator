@@ -1,0 +1,28 @@
+{
+  "manifest_version": 3,
+  "name": "Trust AI Moderator Operator",
+  "version": "1.0.0",
+  "description": "AI-powered browser moderation and privacy operator.",
+  "permissions": ["storage", "tabs", "scripting"],
+  "host_permissions": [
+    "http://localhost:5173/*",
+    "https://your-real-vercel-link.vercel.app/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_title": "Trust AI Moderator",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost:5173/*",
+        "https://your-real-vercel-link.vercel.app/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

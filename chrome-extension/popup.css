@@ -1,0 +1,112 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #081120;
+  color: white;
+}
+
+.popup {
+  width: 340px;
+  padding: 16px;
+}
+
+h1 {
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+
+.sub {
+  margin: 0 0 14px;
+  color: #b9c6d6;
+  font-size: 13px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.08);
+  color: white;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: #31d7f7;
+  color: #04111d;
+  font-weight: bold;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  border: 1px solid #243550;
+  background: #0a1322;
+  color: white;
+}
+
+button {
+  width: 100%;
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  background: #31d7f7;
+  color: #04111d;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button.secondary {
+  margin-top: 10px;
+  background: rgba(255,255,255,0.08);
+  color: white;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.buttons button {
+  flex: 1;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  margin: 14px 0;
+}
+
+#status {
+  margin-top: 12px;
+  color: #9befff;
+  font-size: 13px;
+  min-height: 16px;
+}

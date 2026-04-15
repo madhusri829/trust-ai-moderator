@@ -1,49 +1,246 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
-function App() {
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [password, setPassword] = useState("");
-  const [selectedTab, setSelectedTab] = useState("");
-  const [unlockedTab, setUnlockedTab] = useState("");
-  const [showRedirectModal, setShowRedirectModal] = useState(false);
-  const [redirectLink, setRedirectLink] = useState("");
-  const [redirectName, setRedirectName] = useState("");
+function classifyContent(text, url) {
+  const lower = `${text} ${url}`.toLowerCase();
 
-  const correctPassword = "1234";
+  if (
+    lower.includes("study") ||
+    lower.includes("course") ||
+    lower.includes("learn") ||
+    lower.includes("education")
+  ) {
+    return "Study";
+  }
+
+  if (
+    lower.includes("hackathon") ||
+    lower.includes("devpost") ||
+    lower.includes("challenge") ||
+    lower.includes("project")
+  ) {
+    return "Hackathon";
+  }
+
+  if (
+    lower.includes("movie") ||
+    lower.includes("netflix") ||
+    lower.includes("trailer") ||
+    lower.includes("music")
+  ) {
+    return "Movies";
+  }
+
+  if (
+    lower.includes("free") ||
+    lower.includes("offer") ||
+    lower.includes("click") ||
+    lower.includes("reward") ||
+    lower.includes("urgent")
+  ) {
+    return "Spam";
+  }
+
+  if (
+    lower.includes("profile") ||
+    lower.includes("account") ||
+    lower.includes("password") ||
+    lower.includes("personal")
+  ) {
+    return "Personal";
+  }
+
+  return "Others";
+}
+
+function smartScheduleMessage() {
+  const hour = new Date().getHours();
+
+  if (hour >= 6 && hour < 12) return "Good morning! Time to study 📚";
+  if (hour >= 12 && hour < 18) return "Keep working! You're doing great 💻";
+  if (hour >= 18 && hour < 23) return "Relax or continue learning smartly 🎬";
+  return "Time to rest 😴";
+}
+
+export default function App() {
+  const [activePage, setActivePage] = useState("home");
+  const [storedUser, setStoredUser] = useState(null);
+  const [loggedInUser, setLoggedInUser] = useState(null);
+
+  const [signupData, setSignupData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
+
+  const [loginData, setLoginData] = useState({
+    username: "",
+    password: "",
+  });
+
+  const [siteLocked, setSiteLocked] = useState(false);
+  const [unlockPassword, setUnlockPassword] = useState("");
+  const [privateUnlocked, setPrivateUnlocked] = useState(false);
+
+  const [showRedirectModal, setShowRedirectModal] = useState(false);
+  const [redirectName, setRedirectName] = useState("");
+  const [redirectLink, setRedirectLink] = useState("");
+
+  const [sampleTitle, setSampleTitle] = useState("Click here for free rewards");
+  const [sampleUrl, setSampleUrl] = useState("http://spam-site.com");
+  const [classificationResult, setClassificationResult] = useState("");
+  const [scheduleMessage, setScheduleMessage] = useState("");
+
+  const [cookieWarnings, setCookieWarnings] = useState([]);
+  const [reminderEmail, setReminderEmail] = useState("");
+  const [emailStatus, setEmailStatus] = useState("");
+
+  const lockSiteNow = () => {
+    localStorage.setItem("site_locked", "true");
+    setSiteLocked(true);
+    setPrivateUnlocked(false);
+  };
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("trust_user");
+    const savedSession = localStorage.getItem("trust_session");
+    const savedLock = localStorage.getItem("site_locked");
+
+    if (savedUser) {
+      setStoredUser(JSON.parse(savedUser));
+    }
+
+    if (savedSession) {
+      const parsedSession = JSON.parse(savedSession);
+      setLoggedInUser(parsedSession);
+      setReminderEmail(parsedSession.email || "");
+      setActivePage("dashboard");
+    }
+
+    if (savedLock === "true") {
+      setSiteLocked(true);
+    }
+
+    setScheduleMessage(smartScheduleMessage());
+
+    const detectedCookies = document.cookie
+      .split(";")
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .filter(
+        (cookie) =>
+          cookie.toLowerCase().includes("track") ||
+          cookie.toLowerCase().includes("ads") ||
+          cookie.toLowerCase().includes("analytics")
+      );
+
+    setCookieWarnings(detectedCookies);
+  }, []);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        setUnlockedTab("");
+        lockSiteNow();
       }
     };
 
+    const handleBlur = () => {
+      lockSiteNow();
+    };
+
+    window.addEventListener("blur", handleBlur);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
+      window.removeEventListener("blur", handleBlur);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
-  const openPrivateTab = (tabName) => {
-    setSelectedTab(tabName);
-    setPassword("");
-    setShowPasswordModal(true);
+  const handleSignup = (e) => {
+    e.preventDefault();
+
+    const { username, email, password } = signupData;
+    if (!username || !email || !password) {
+      alert("Please fill all fields.");
+      return;
+    }
+
+    const newUser = { username, email, password };
+    localStorage.setItem("trust_user", JSON.stringify(newUser));
+    setStoredUser(newUser);
+
+    alert("Account created successfully. Please login.");
+    setActivePage("login");
+    setSignupData({
+      username: "",
+      email: "",
+      password: "",
+    });
   };
 
-  const verifyPassword = () => {
-    if (password === correctPassword) {
-      setUnlockedTab(selectedTab);
-      setShowPasswordModal(false);
-      setPassword("");
+  const handleLogin = (e) => {
+    e.preventDefault();
+
+    if (!storedUser) {
+      alert("No account found. Please sign up first.");
+      return;
+    }
+
+    if (
+      loginData.username === storedUser.username &&
+      loginData.password === storedUser.password
+    ) {
+      setLoggedInUser(storedUser);
+      setReminderEmail(storedUser.email);
+      localStorage.setItem("trust_session", JSON.stringify(storedUser));
+      localStorage.removeItem("site_locked");
+      setSiteLocked(false);
+      setUnlockPassword("");
+      setActivePage("dashboard");
+      alert("Login successful.");
     } else {
-      alert("Wrong password. Use 1234 for demo.");
+      alert("Invalid username or password.");
     }
   };
 
-  const closePrivateView = () => {
-    setUnlockedTab("");
+  const handleLogout = () => {
+    localStorage.removeItem("trust_session");
+    localStorage.removeItem("site_locked");
+    setLoggedInUser(null);
+    setSiteLocked(false);
+    setPrivateUnlocked(false);
+    setUnlockPassword("");
+    setActivePage("home");
+  };
+
+  const unlockSite = () => {
+    if (!loggedInUser) {
+      alert("Please login first.");
+      return;
+    }
+
+    if (unlockPassword === loggedInUser.password) {
+      localStorage.removeItem("site_locked");
+      setSiteLocked(false);
+      setUnlockPassword("");
+    } else {
+      alert("Wrong password.");
+    }
+  };
+
+  const unlockPrivateContent = () => {
+    if (!loggedInUser) {
+      alert("Please login first.");
+      return;
+    }
+
+    if (unlockPassword === loggedInUser.password) {
+      setPrivateUnlocked(true);
+      setUnlockPassword("");
+    } else {
+      alert("Wrong password.");
+    }
   };
 
   const openExternalLink = (name, link) => {
@@ -52,12 +249,54 @@ function App() {
     setShowRedirectModal(true);
   };
 
-  const confirmRedirect = () => {
-    window.open(redirectLink, "_blank");
+  const confirmRedirect = async () => {
+    try {
+      await navigator.clipboard.writeText(redirectLink);
+      alert("Link copied. Paste it manually in browser.");
+    } catch (error) {
+      alert("Could not copy link.");
+    }
+
     setShowRedirectModal(false);
-    setRedirectLink("");
     setRedirectName("");
+    setRedirectLink("");
   };
+
+  const runClassification = () => {
+    const result = classifyContent(sampleTitle, sampleUrl);
+    setClassificationResult(result);
+
+    const usage = JSON.parse(localStorage.getItem("usage")) || {};
+    usage[result] = (usage[result] || 0) + 1;
+    localStorage.setItem("usage", JSON.stringify(usage));
+  };
+
+  const sendReminderEmail = async () => {
+    if (!reminderEmail) {
+      setEmailStatus("Please enter an email.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: reminderEmail,
+          message: "Reminder: Continue your work today with Trust AI Moderator.",
+        }),
+      });
+
+      const text = await response.text();
+      setEmailStatus(text);
+    } catch (error) {
+      setEmailStatus("Error sending email.");
+    }
+  };
+
+  const usageData = JSON.parse(localStorage.getItem("usage")) || {};
 
   return (
     <div className="app">
@@ -69,261 +308,285 @@ function App() {
             <p>AI-Powered Browser Content Moderator</p>
           </div>
         </div>
+
         <nav>
-          <a href="#home">Home</a>
-          <a href="#features">Features</a>
-          <a href="#analytics">Analytics</a>
-          <a href="#privacy">Private Tabs</a>
-          <a href="#links">External Links</a>
+          <button onClick={() => setActivePage("home")}>Home</button>
+          <button onClick={() => setActivePage("features")}>Features</button>
+          <button onClick={() => setActivePage("implementation")}>Implementation</button>
+          {!loggedInUser && <button onClick={() => setActivePage("login")}>Login</button>}
+          {!loggedInUser && <button onClick={() => setActivePage("signup")}>Sign Up</button>}
+          {loggedInUser && <button onClick={() => setActivePage("dashboard")}>Dashboard</button>}
+          {loggedInUser && <button onClick={handleLogout}>Logout</button>}
         </nav>
       </header>
 
-      <section className="hero" id="home">
-        <div className="hero-left">
-          <span className="badge">Smart Privacy • Safe Browsing • Better Organization</span>
-          <h2>Secure browsing with smart moderation and protected tabs</h2>
-          <p>
-            A modern website interface for your project with ad detection, harmful link alerts,
-            private password-protected tabs, reminders, analytics, and secure external navigation.
-          </p>
-          <div className="hero-buttons">
-            <a href="#features" className="btn primary-btn">Explore Features</a>
-            <a href="#privacy" className="btn secondary-btn">Open Private Tabs</a>
-          </div>
-        </div>
+      {activePage === "home" && (
+        <section className="hero">
+          <div className="hero-content">
+            <div className="hero-left">
+              <span className="badge">AI Privacy • Safe Browsing • Smart Protection</span>
+              <h2>Trust AI Moderator</h2>
+              <p>
+                Protect browsing privacy, detect unsafe links, secure private tabs,
+                detect cookies, and prevent jumping to other platforms without user click.
+              </p>
 
-        <div className="hero-right">
-          <div className="stat-card">
-            <h3>99.2%</h3>
-            <p>Ads Removed</p>
-          </div>
-          <div className="stat-card">
-            <h3>120ms</h3>
-            <p>Load Time</p>
-          </div>
-          <div className="stat-card">
-            <h3>342</h3>
-            <p>Unsafe Links Flagged</p>
-          </div>
-          <div className="stat-card">
-            <h3>98/100</h3>
-            <p>Mobile Score</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="section" id="features">
-        <h2 className="section-title">Core Features</h2>
-        <div className="card-grid">
-          <div className="feature-card">
-            <h3>Ad Detection & Removal</h3>
-            <p>Detects spam, popups, and promotional clutter to create a clean browsing experience.</p>
-          </div>
-          <div className="feature-card">
-            <h3>Harmful Link Detection</h3>
-            <p>Flags suspicious URLs and helps prevent phishing or insecure navigation.</p>
-          </div>
-          <div className="feature-card">
-            <h3>Smart Categorization</h3>
-            <p>Organizes browser content into Study, Hackathon, Personal, Movies, and Others.</p>
-          </div>
-          <div className="feature-card">
-            <h3>Usage-Based Reminders</h3>
-            <p>Provides timely reminders based on activity and frequent browsing patterns.</p>
-          </div>
-          <div className="feature-card">
-            <h3>Exclusive Tab Privacy</h3>
-            <p>Private content stays blurred and opens only after password verification.</p>
-          </div>
-          <div className="feature-card">
-            <h3>Safe External Navigation</h3>
-            <p>External links never open directly. A confirmation box appears first.</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="section analytics-section" id="analytics">
-        <h2 className="section-title">Smart Analytics</h2>
-        <div className="analytics-grid">
-          <div className="analytics-card">
-            <h3>Activity Overview</h3>
-
-            <div className="bar-item">
-              <div className="bar-label">
-                <span>Study</span>
-                <span>88%</span>
-              </div>
-              <div className="bar-bg"><div className="bar-fill fill-88"></div></div>
-            </div>
-
-            <div className="bar-item">
-              <div className="bar-label">
-                <span>Hackathon</span>
-                <span>76%</span>
-              </div>
-              <div className="bar-bg"><div className="bar-fill fill-76"></div></div>
-            </div>
-
-            <div className="bar-item">
-              <div className="bar-label">
-                <span>Personal</span>
-                <span>64%</span>
-              </div>
-              <div className="bar-bg"><div className="bar-fill fill-64"></div></div>
-            </div>
-
-            <div className="bar-item">
-              <div className="bar-label">
-                <span>Movies</span>
-                <span>38%</span>
-              </div>
-              <div className="bar-bg"><div className="bar-fill fill-38"></div></div>
-            </div>
-          </div>
-
-          <div className="analytics-card">
-            <h3>AI Suggestions</h3>
-            <div className="suggestion-box">
-              <strong>Reminder</strong>
-              <p>You usually study at 8 PM. Continue your learning today.</p>
-            </div>
-            <div className="suggestion-box">
-              <strong>Privacy Alert</strong>
-              <p>Private content will auto-lock when the tab loses focus.</p>
-            </div>
-            <div className="suggestion-box">
-              <strong>Safety Alert</strong>
-              <p>Suspicious external links require confirmation before opening.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="section" id="privacy">
-        <h2 className="section-title">Private Tabs</h2>
-        <div className="card-grid">
-          <div className="private-card">
-            <h3>Personal Workspace 🔒</h3>
-            <div className={`private-content ${unlockedTab === "personal" ? "unlocked" : "locked"}`}>
-              <p>Private notes, personal browsing activity, and confidential content.</p>
-            </div>
-            <div className="private-actions">
-              <button className="btn primary-btn" onClick={() => openPrivateTab("personal")}>
-                Unlock Tab
-              </button>
-              {unlockedTab === "personal" && (
-                <button className="btn secondary-btn" onClick={closePrivateView}>
-                  Lock Again
+              <div className="hero-buttons">
+                <button className="btn primary-btn" onClick={() => setActivePage("features")}>
+                  Explore Features
                 </button>
+                {!loggedInUser && (
+                  <button className="btn secondary-btn" onClick={() => setActivePage("signup")}>
+                    Create Account
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="hero-right">
+              <img src="/front.webp" alt="Trust AI Moderator" className="hero-image" />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {activePage === "features" && (
+        <section className="section">
+          <h2 className="section-title">Core Features</h2>
+
+          <div className="card-grid">
+            <div className="feature-card">
+              <h3>Ad Detection & Removal</h3>
+              <p>Highlights spammy and ad-like content for a cleaner browsing experience.</p>
+            </div>
+
+            <div className="feature-card">
+              <h3>Harmful Link Detection</h3>
+              <p>Warns users about insecure and suspicious links.</p>
+            </div>
+
+            <div className="feature-card">
+              <h3>Private Tab Protection</h3>
+              <p>Locks sensitive content and requires the user's own password to unlock.</p>
+            </div>
+
+            <div className="feature-card">
+              <h3>Cookie Detection</h3>
+              <p>Detects suspicious tracking and analytics cookie names.</p>
+            </div>
+
+            <div className="feature-card">
+              <h3>Email Reminders</h3>
+              <p>Sends reminder emails through the backend server.</p>
+            </div>
+
+            <div className="feature-card">
+              <h3>Smart Scheduling</h3>
+              <p>Shows dynamic reminders based on current time.</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {activePage === "implementation" && (
+        <section className="section">
+          <h2 className="section-title">Implementation</h2>
+
+          <div className="image-grid">
+            <div className="image-card">
+              <img src="/future.webp" alt="Future of moderation" />
+              <h3>Future of Moderation</h3>
+              <p>
+                AI helps improve safety, relevance, and content quality in modern digital platforms.
+              </p>
+            </div>
+
+            <div className="image-card">
+              <img src="/tools.webp" alt="Tools and methods" />
+              <h3>Tools & Methods</h3>
+              <p>
+                Uses privacy locks, content warnings, cookie detection, and controlled navigation.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {activePage === "signup" && (
+        <section className="form-section">
+          <div className="form-card">
+            <h2>Create Account</h2>
+            <p className="form-subtitle">Create your own username and password</p>
+
+            <form onSubmit={handleSignup}>
+              <input
+                type="text"
+                placeholder="Username"
+                value={signupData.username}
+                onChange={(e) => setSignupData({ ...signupData, username: e.target.value })}
+              />
+
+              <input
+                type="email"
+                placeholder="Email"
+                value={signupData.email}
+                onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+              />
+
+              <input
+                type="password"
+                placeholder="Create Password"
+                value={signupData.password}
+                onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+              />
+
+              <button type="submit" className="btn primary-btn full-btn">
+                Sign Up
+              </button>
+            </form>
+          </div>
+        </section>
+      )}
+
+      {activePage === "login" && (
+        <section className="form-section">
+          <div className="form-card">
+            <h2>Login</h2>
+            <p className="form-subtitle">Use your own account password</p>
+
+            <form onSubmit={handleLogin}>
+              <input
+                type="text"
+                placeholder="Username"
+                value={loginData.username}
+                onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+              />
+
+              <input
+                type="password"
+                placeholder="Password"
+                value={loginData.password}
+                onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+              />
+
+              <button type="submit" className="btn primary-btn full-btn">
+                Login
+              </button>
+            </form>
+          </div>
+        </section>
+      )}
+
+      {activePage === "dashboard" && loggedInUser && (
+        <section className="section">
+          <h2 className="section-title">Welcome, {loggedInUser.username}</h2>
+
+          <div className="dashboard-grid">
+            <div className="feature-card">
+              <h3>User Information</h3>
+              <p><strong>Username:</strong> {loggedInUser.username}</p>
+              <p><strong>Email:</strong> {loggedInUser.email}</p>
+              <p><strong>Schedule:</strong> {scheduleMessage}</p>
+            </div>
+
+            <div className="feature-card">
+              <h3>Private Content</h3>
+              {!privateUnlocked ? (
+                <>
+                  <input
+                    type="password"
+                    placeholder="Enter your password"
+                    value={unlockPassword}
+                    onChange={(e) => setUnlockPassword(e.target.value)}
+                  />
+                  <button className="btn primary-btn full-btn" onClick={unlockPrivateContent}>
+                    Unlock Private Area
+                  </button>
+                </>
+              ) : (
+                <div className="private-box">
+                  <p>
+                    Private browser protection settings, secure notes, and moderation tools are now visible.
+                  </p>
+                </div>
               )}
             </div>
-          </div>
 
-          <div className="private-card">
-            <h3>Study Vault 🔒</h3>
-            <div className={`private-content ${unlockedTab === "study" ? "unlocked" : "locked"}`}>
-              <p>Exam schedules, learning plans, deadlines, and saved study resources.</p>
-            </div>
-            <div className="private-actions">
-              <button className="btn primary-btn" onClick={() => openPrivateTab("study")}>
-                Unlock Tab
+            <div className="feature-card">
+              <h3>Safe External Access</h3>
+              <button
+                className="btn primary-btn full-btn"
+                onClick={() =>
+                  openExternalLink(
+                    "GitHub Repository",
+                    "https://github.com/madhusri829/trust-ai-moderator"
+                  )
+                }
+              >
+                Copy GitHub Link
               </button>
-              {unlockedTab === "study" && (
-                <button className="btn secondary-btn" onClick={closePrivateView}>
-                  Lock Again
-                </button>
+            </div>
+
+            <div className="feature-card">
+              <h3>AI Classification</h3>
+              <input
+                type="text"
+                placeholder="Enter page title"
+                value={sampleTitle}
+                onChange={(e) => setSampleTitle(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Enter URL"
+                value={sampleUrl}
+                onChange={(e) => setSampleUrl(e.target.value)}
+              />
+              <button className="btn primary-btn full-btn" onClick={runClassification}>
+                Classify Content
+              </button>
+              {classificationResult && (
+                <p className="result-text"><strong>Category:</strong> {classificationResult}</p>
               )}
             </div>
-          </div>
 
-          <div className="private-card">
-            <h3>Hackathon Strategy 🔒</h3>
-            <div className={`private-content ${unlockedTab === "hackathon" ? "unlocked" : "locked"}`}>
-              <p>Project ideas, pitch notes, deployment plans, and judge preparation content.</p>
-            </div>
-            <div className="private-actions">
-              <button className="btn primary-btn" onClick={() => openPrivateTab("hackathon")}>
-                Unlock Tab
-              </button>
-              {unlockedTab === "hackathon" && (
-                <button className="btn secondary-btn" onClick={closePrivateView}>
-                  Lock Again
-                </button>
+            <div className="feature-card">
+              <h3>Cookie Detection</h3>
+              {cookieWarnings.length > 0 ? (
+                <div className="private-box">
+                  {cookieWarnings.map((cookie, index) => (
+                    <p key={index}>⚠ {cookie}</p>
+                  ))}
+                </div>
+              ) : (
+                <p>No suspicious cookies detected.</p>
               )}
             </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="section" id="links">
-        <h2 className="section-title">External Links</h2>
-        <div className="card-grid">
-          <div className="feature-card">
-            <h3>GitHub Repository</h3>
-            <p>Open your project code safely with redirect confirmation.</p>
-            <button
-              className="btn primary-btn"
-              onClick={() =>
-                openExternalLink("GitHub Repository", "https://github.com/madhusri829/ai-browser-moderator")
-              }
-            >
-              Open Safely
-            </button>
-          </div>
-
-          <div className="feature-card">
-            <h3>Live Demo</h3>
-            <p>Open your deployed website only after confirmation.</p>
-            <button
-              className="btn primary-btn"
-              onClick={() =>
-                openExternalLink("Live Demo", "https://ai-browser-moderator.vercel.app/")
-              }
-            >
-              Open Safely
-            </button>
-          </div>
-
-          <div className="feature-card">
-            <h3>Vercel</h3>
-            <p>Go to deployment dashboard through a protected redirect step.</p>
-            <button
-              className="btn primary-btn"
-              onClick={() => openExternalLink("Vercel", "https://vercel.com/")}
-            >
-              Open Safely
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <footer className="footer">
-        <h3>Trust AI Moderator</h3>
-        <p>AI-powered secure browsing, privacy-aware protection, and smart organization.</p>
-      </footer>
-
-      {showPasswordModal && (
-        <div className="modal-overlay">
-          <div className="modal-box">
-            <h3>Unlock Private Tab</h3>
-            <p>Enter password to view this protected content.</p>
-            <input
-              type="password"
-              placeholder="Enter password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <p className="demo-text">Demo password: 1234</p>
-            <div className="modal-buttons">
-              <button className="btn primary-btn" onClick={verifyPassword}>
-                Unlock
+            <div className="feature-card">
+              <h3>Email Reminder</h3>
+              <input
+                type="email"
+                placeholder="Enter reminder email"
+                value={reminderEmail}
+                onChange={(e) => setReminderEmail(e.target.value)}
+              />
+              <button className="btn primary-btn full-btn" onClick={sendReminderEmail}>
+                Send Reminder
               </button>
-              <button className="btn secondary-btn" onClick={() => setShowPasswordModal(false)}>
-                Cancel
-              </button>
+              {emailStatus && <p className="result-text">{emailStatus}</p>}
+            </div>
+
+            <div className="feature-card">
+              <h3>Usage Tracking</h3>
+              <p>Study: {usageData.Study || 0}</p>
+              <p>Hackathon: {usageData.Hackathon || 0}</p>
+              <p>Movies: {usageData.Movies || 0}</p>
+              <p>Spam: {usageData.Spam || 0}</p>
+              <p>Personal: {usageData.Personal || 0}</p>
+              <p>Others: {usageData.Others || 0}</p>
             </div>
           </div>
-        </div>
+        </section>
       )}
 
       {showRedirectModal && (
@@ -331,14 +594,15 @@ function App() {
           <div className="modal-box">
             <h3>Leave Platform?</h3>
             <p>
-              You are about to open <strong>{redirectName}</strong> on another platform.
+              You are about to access <strong>{redirectName}</strong>.
             </p>
             <p className="warning-text">
-              This website does not directly jump to external platforms.
+              This website does not directly open external platforms. The link will be copied instead.
             </p>
+
             <div className="modal-buttons">
               <button className="btn primary-btn" onClick={confirmRedirect}>
-                Continue
+                Copy Link
               </button>
               <button className="btn secondary-btn" onClick={() => setShowRedirectModal(false)}>
                 Stay Here
@@ -347,8 +611,26 @@ function App() {
           </div>
         </div>
       )}
+
+      {siteLocked && (
+        <div className="site-lock-overlay">
+          <div className="site-lock-box">
+            <h2>Site Locked</h2>
+            <p>This website was locked because you switched tab, window, or app.</p>
+
+            <input
+              type="password"
+              placeholder="Enter your password"
+              value={unlockPassword}
+              onChange={(e) => setUnlockPassword(e.target.value)}
+            />
+
+            <button className="btn primary-btn full-btn" onClick={unlockSite}>
+              Unlock Site
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-export default App;
